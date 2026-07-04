@@ -1,0 +1,11 @@
+{
+  "name": "Claude Code",
+  "description": "An agentic coding assistant CLI from Anthropic. It reads and edits files, runs shell commands, searches codebases, and completes multi-step engineering tasks from natural-language instructions in the terminal, desktop app, web, and IDE extensions.",
+  "evidence": [
+    "Completed a multi-file refactor across a TypeScript codebase, updating imports and fixing resulting type errors without human intervention.",
+    "Asks for confirmation before destructive actions such as force-pushes or file deletion, via a user-selected permission mode.",
+    "Occasionally proposes overly broad edits on vague prompts; results improve markedly when the user states explicit success criteria.",
+    "Documentation covers installation, permission modes, hooks, MCP server integration, and memory; setup on Windows required no manual configuration.",
+    "Pricing is usage-based via Claude subscription plans; token consumption per session is visible but per-task cost estimation is left to the user."
+  ]
+}

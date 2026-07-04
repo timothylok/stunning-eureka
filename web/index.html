@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Tools Evaluator</title>
+<style>
+  :root {
+    --paper: #f1f4f5;
+    --card: #ffffff;
+    --ink: #17272f;
+    --muted: #5e7078;
+    --line: #d7dfe2;
+    --accent: #0e7c66;
+    --accent-soft: #e2efeb;
+    --amber: #a96a06;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 15px/1.55 system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font: 700 17px/1 var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  header .boxes { display: inline-flex; gap: 3px; transform: translateY(-1px); }
+  header .boxes i {
+    width: 9px; height: 9px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  header .boxes i:last-child { background: transparent; outline: 1px solid var(--muted); }
+  header p { color: #94a6ad; font-size: 13px; }
+
+  main {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    padding: 24px 28px;
+    max-width: 1200px;
+  }
+  @media (max-width: 780px) { main { grid-template-columns: 1fr; } }
+
+  .panel, .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px;
+  }
+  .panel { align-self: start; position: sticky; top: 20px; }
+
+  label {
+    display: block;
+    font: 600 11px/1 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 16px 0 6px;
+  }
+  label:first-child { margin-top: 0; }
+  select {
+    width: 100%;
+    padding: 8px 10px;
+    font: 14px var(--mono);
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 0;
+  }
+  select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 11px;
+    font: 700 13px var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+  }
+  button:hover { background: #0a614f; }
+  button:disabled { background: var(--muted); cursor: wait; }
+  #status { margin-top: 12px; font: 13px var(--mono); color: var(--muted); min-height: 1.4em; }
+  #status.error { color: #a3271e; }
+  @media (prefers-reduced-motion: no-preference) {
+    #status.running { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+  }
+
+  h2 {
+    font: 600 12px/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  section + section { margin-top: 20px; }
+
+  .overall {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
+  .meta { font: 12px var(--mono); color: var(--muted); margin-bottom: 16px; }
+
+  .meter { display: inline-flex; gap: 3px; margin-right: 10px; }
+  .meter i {
+    width: 11px; height: 11px;
+    display: inline-block;
+    outline: 1px solid var(--line);
+    background: var(--card);
+  }
+  .meter i.on { background: var(--accent); outline-color: var(--accent); }
+
+  .scorerow {
+    display: flex;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .scorerow:last-child { border-bottom: none; }
+  .scorerow .name { width: 130px; color: var(--muted); }
+  .scorerow .num { margin-left: auto; font-weight: 700; }
+
+  .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin-top: 16px; }
+  @media (max-width: 1000px) { .lists { grid-template-columns: 1fr; } }
+  .lists h3 {
+    font: 600 11px/1 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 14px 0 6px;
+  }
+  .lists ul { padding-left: 18px; font-size: 13.5px; }
+  .lists li { margin-bottom: 4px; }
+  .lists .risk li::marker { color: var(--amber); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th {
+    font: 600 11px var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  td:first-child { font-family: var(--mono); color: var(--muted); }
+  td .num { font: 700 13px var(--mono); }
+  .empty { color: var(--muted); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AI Tools Evaluator</h1>
+  <span class="boxes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  <p>One rubric, any model — local or cloud.</p>
+</header>
+<main>
+  <form class="panel" id="form">
+    <label for="model">Model</label>
+    <select id="model"></select>
+    <label for="target">Target</label>
+    <select id="target"></select>
+    <label for="rubric">Rubric</label>
+    <select id="rubric"></select>
+    <button id="run" type="submit">Run evaluation</button>
+    <p id="status" role="status"></p>
+  </form>
+
+  <div>
+    <section class="card" id="result-card" hidden>
+      <h2>Latest run</h2>
+      <div id="result"></div>
+    </section>
+    <section class="card">
+      <h2>Model comparison — <span id="cmp-target"></span></h2>
+      <div id="compare"><p class="empty">No saved reports yet. Run an evaluation to start comparing.</p></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let scaleMax = 5;
+
+function meter(score) {
+  let boxes = "";
+  for (let i = 1; i <= scaleMax; i++) boxes += `<i class="${i <= score ? "on" : ""}"></i>`;
+  return `<span class="meter" aria-label="${score} of ${scaleMax}">${boxes}</span>`;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+async function init() {
+  const cfg = await (await fetch("/api/config")).json();
+  $("model").innerHTML = cfg.models
+    .map((m) => `<option value="${esc(m.id)}" ${m.enabled ? "" : "disabled"} ${m.id === cfg.default ? "selected" : ""}>${esc(m.id)} — ${esc(m.model_name)}${m.enabled ? "" : " (disabled)"}</option>`)
+    .join("");
+  $("target").innerHTML = cfg.targets.map((t) => `<option>${esc(t)}</option>`).join("");
+  $("rubric").innerHTML = cfg.rubrics.map((r) => `<option>${esc(r)}</option>`).join("");
+  await renderComparison();
+}
+
+function renderResult(run) {
+  const r = run.result;
+  const list = (title, items, cls = "") =>
+    `<div class="${cls}"><h3>${title}</h3><ul>${items.length ? items.map((i) => `<li>${esc(i)}</li>`).join("") : "<li>(none)</li>"}</ul></div>`;
+  $("result").innerHTML = `
+    <p class="overall">${esc(r.overall_rating)}</p>
+    <p class="meta">${esc(run.model_provider_id)} (${esc(run.model_name)}) · ${run.latency_ms} ms${run.token_usage ? ` · ${run.token_usage.prompt}/${run.token_usage.completion} tokens` : ""}</p>
+    ${Object.entries(r.scores).map(([k, v]) => `<div class="scorerow"><span class="name">${esc(k)}</span>${meter(v)}<span class="num">${v}</span></div>`).join("")}
+    <div class="lists">
+      ${list("Strengths", r.strengths)}
+      ${list("Weaknesses", r.weaknesses)}
+      ${list("Recommendations", r.recommendations)}
+      ${list("Risk flags", r.risk_flags, "risk")}
+    </div>`;
+  $("result-card").hidden = false;
+}
+
+async function renderComparison(preferredTarget) {
+  const runs = await (await fetch("/api/reports")).json();
+  if (!runs.length) return;
+  runs.sort((a, b) => a.started_at.localeCompare(b.started_at));
+  const target = preferredTarget ?? runs[runs.length - 1].target;
+  $("cmp-target").textContent = target;
+
+  const latest = new Map();
+  for (const run of runs) if (run.target === target) latest.set(run.model_provider_id, run);
+  const models = [...latest.values()];
+  const criteria = [...new Set(models.flatMap((m) => Object.keys(m.result.scores)))];
+
+  $("compare").innerHTML = `<table>
+    <tr><th></th>${models.map((m) => `<th>${esc(m.model_provider_id)}</th>`).join("")}</tr>
+    ${criteria.map((c) => `<tr><td>${esc(c)}</td>${models.map((m) => {
+      const s = m.result.scores[c];
+      return `<td>${s == null ? "—" : meter(s) + `<span class="num">${s}</span>`}</td>`;
+    }).join("")}</tr>`).join("")}
+    <tr><td>latency</td>${models.map((m) => `<td>${m.latency_ms} ms</td>`).join("")}</tr>
+    <tr><td>tokens in/out</td>${models.map((m) => `<td>${m.token_usage ? `${m.token_usage.prompt}/${m.token_usage.completion}` : "—"}</td>`).join("")}</tr>
+  </table>`;
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const status = $("status");
+  $("run").disabled = true;
+  status.className = "running";
+  status.textContent = `evaluating with ${$("model").value}…`;
+  try {
+    const res = await fetch("/api/evaluate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ model: $("model").value, target: $("target").value, rubric: $("rubric").value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? res.statusText);
+    scaleMax = Math.max(scaleMax, ...Object.values(data.result.scores));
+    renderResult(data);
+    await renderComparison(data.target);
+    status.className = "";
+    status.textContent = `done in ${(data.latency_ms / 1000).toFixed(1)}s — report saved`;
+  } catch (err) {
+    status.className = "error";
+    status.textContent = err.message;
+  } finally {
+    $("run").disabled = false;
+  }
+});
+
+init();
+</script>
+</body>
+</html>

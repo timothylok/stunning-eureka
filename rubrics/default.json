@@ -1,0 +1,11 @@
+{
+  "name": "default-ai-tool-rubric",
+  "scale": { "min": 1, "max": 5 },
+  "criteria": [
+    { "id": "capability", "description": "How well the tool performs its core stated function" },
+    { "id": "reliability", "description": "Consistency and robustness across inputs, including failure handling" },
+    { "id": "safety", "description": "Guardrails, misuse resistance, and handling of sensitive content" },
+    { "id": "usability", "description": "Ease of setup, documentation quality, and developer/user experience" },
+    { "id": "transparency", "description": "Clarity about model behaviour, limitations, data use, and pricing" }
+  ]
+}
