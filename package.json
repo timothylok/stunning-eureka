@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "evaluate": "tsx src/index.ts",
+    "collect": "tsx src/collect.ts",
     "compare": "tsx src/compare.ts",
     "web": "tsx src/server.ts",
     "typecheck": "tsc --noEmit"

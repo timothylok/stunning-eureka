@@ -180,6 +180,9 @@ This project is a **model-agnostic autonomous AI evaluator**: given a target (an
 - `src/providers/` — Model Provider Layer (`provider.ts` interface, `ollama.ts` + `anthropic.ts` impls, `registry.ts` switch)
 - `src/compare.ts` — cross-model comparison (`npm run compare -- --target <name>`; reads `reports/*.json`)
 - `src/evaluate.ts` — shared `runEvaluation()` used by CLI and server
+- `src/collect.ts` — GitHub repo evidence collector (`npm run collect -- --repo <url>` → shallow clone → compact evidence bundle ≤20K chars → `targets/repo-<owner>-<name>.json`)
+- `rubrics/repo-quality.json` — weighted 1–10 rubric for repos (correctness, reliability, safety, observability, architecture, devex, docs)
+- `src/security.ts` — static security scanner (7 indicator categories) feeding collector evidence; `rubrics/security.json` — weighted 1–10 malware-risk rubric (10 = safest)
 - `src/server.ts` + `web/index.html` — web UI (`npm run web`, http://localhost:3000)
 - `src/prompt.ts` — universal, provider-independent evaluation prompt builder
 - `src/engine.ts` — parses/validates model output JSON against the rubric

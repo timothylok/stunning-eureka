@@ -5,7 +5,7 @@
     "mistral": { "type": "local", "model_name": "mistral:7b", "temperature": 0.2, "enabled": true },
     "qwen2.5-coder": { "type": "local", "model_name": "qwen2.5-coder:7b", "temperature": 0.2, "enabled": true },
     "agnes": { "type": "openai", "model_name": "agnes-2.0-flash", "base_url": "https://apihub.agnes-ai.com/v1", "api_key_env": "AGNES_API_KEY", "temperature": 0.2, "enabled": true },
-    "claude": { "type": "anthropic", "model_name": "claude-opus-4-8", "enabled": false },
+    "claude": { "type": "anthropic", "model_name": "claude-opus-4-8", "enabled": true },
     "gpt": { "type": "openai", "model_name": "gpt-4.1", "temperature": 0.2, "enabled": false },
     "gemini": { "type": "google", "model_name": "gemini-2.0-flash", "temperature": 0.2, "enabled": false }
   }

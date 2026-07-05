@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Tools Evaluator — User Guide</title>
+<style>
+  :root {
+    --paper: #f1f4f5;
+    --card: #ffffff;
+    --ink: #17272f;
+    --muted: #5e7078;
+    --line: #d7dfe2;
+    --accent: #0e7c66;
+    --accent-soft: #e2efeb;
+    --amber: #a96a06;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--paper); color: var(--ink); font: 15px/1.6 system-ui, sans-serif; }
+  header {
+    background: var(--ink); color: var(--paper);
+    padding: 18px 28px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  header h1 { font: 700 17px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  header .boxes { display: inline-flex; gap: 3px; }
+  header .boxes i { width: 9px; height: 9px; background: var(--accent); display: inline-block; }
+  header .boxes i:last-child { background: transparent; outline: 1px solid var(--muted); }
+  header a { color: #94a6ad; font-size: 13px; margin-left: auto; }
+
+  main { max-width: 860px; padding: 28px; }
+  section { background: var(--card); border: 1px solid var(--line); padding: 24px 28px; margin-bottom: 20px; }
+  h2 {
+    font: 600 13px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+  }
+  h3 { font: 600 14px/1.3 system-ui; margin: 18px 0 6px; }
+  p, ul, ol { margin-bottom: 10px; }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  code {
+    font: 13px var(--mono); background: var(--paper);
+    border: 1px solid var(--line); padding: 1px 5px;
+  }
+  pre {
+    background: var(--ink); color: #d9e4e8; padding: 14px 16px;
+    font: 13px/1.5 var(--mono); overflow-x: auto; margin: 10px 0;
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 600 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  td:first-child code, td:first-child { font-family: var(--mono); white-space: nowrap; }
+  .note {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    padding: 10px 14px; margin: 10px 0; font-size: 14px;
+  }
+  .warn { border-left-color: var(--amber); background: #f7efe0; }
+  nav.toc { font: 13px var(--mono); }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  nav.toc li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AI Tools Evaluator</h1>
+  <span class="boxes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  <a href="/">← back to the evaluator</a>
+</header>
+<main>
+
+<section>
+  <h2>What it is</h2>
+  <p>The AI Tools Evaluator scores a <strong>target</strong> (an AI tool description, or a GitHub repository) against a <strong>rubric</strong> using any LLM — local models through Ollama or cloud models through their APIs. Because the evaluation logic never depends on a specific vendor, the same target and rubric can be run through several models and compared side by side.</p>
+  <pre><code>target + rubric → prompt builder → model provider → JSON validation → report (JSON + Markdown)</code></pre>
+  <nav class="toc">
+    <ul>
+      <li><a href="#setup">1 · Setup</a></li>
+      <li><a href="#evaluate">2 · Run an evaluation (CLI)</a></li>
+      <li><a href="#collect">3 · Evaluate a GitHub repo</a></li>
+      <li><a href="#compare">4 · Compare models</a></li>
+      <li><a href="#webui">5 · Web UI</a></li>
+      <li><a href="#models">6 · Models &amp; providers</a></li>
+      <li><a href="#targets">7 · Targets</a></li>
+      <li><a href="#rubrics">8 · Rubrics</a></li>
+      <li><a href="#reports">9 · Reports</a></li>
+      <li><a href="#env">10 · Environment variables</a></li>
+      <li><a href="#troubleshooting">11 · Troubleshooting</a></li>
+    </ul>
+  </nav>
+</section>
+
+<section id="setup">
+  <h2>1 · Setup</h2>
+  <ol>
+    <li>Install <strong>Node.js 22+</strong> (the project uses built-in <code>fetch</code> and <code>.env</code> loading — there are no runtime dependencies).</li>
+    <li>Run <code>npm install</code> once (dev tooling only: TypeScript and tsx).</li>
+    <li>For local models, install <a href="https://ollama.com">Ollama</a> and pull at least one model, e.g. <code>ollama pull llama3.1:8b</code>.</li>
+    <li>For cloud models, put API keys in a <code>.env</code> file at the project root (see <a href="#env">§10</a>). <code>.env</code> is gitignored.</li>
+  </ol>
+</section>
+
+<section id="evaluate">
+  <h2>2 · Run an evaluation (CLI)</h2>
+  <pre><code>npm run evaluate -- --target targets/example.json --rubric rubrics/default.json --model llama3.1</code></pre>
+  <p>All flags are optional:</p>
+  <table>
+    <tr><th>Flag</th><th>Default</th><th>Meaning</th></tr>
+    <tr><td>--target</td><td>targets/example.json</td><td>Target file to evaluate</td></tr>
+    <tr><td>--rubric</td><td>rubrics/default.json</td><td>Rubric to score against</td></tr>
+    <tr><td>--model</td><td>the <code>default</code> entry in models.json</td><td>Model id from models.json</td></tr>
+  </table>
+  <p>The run prints the overall verdict and per-criterion scores, then saves a JSON + Markdown report pair to <code>reports/</code>.</p>
+</section>
+
+<section id="collect">
+  <h2>3 · Evaluate a GitHub repo</h2>
+  <p>The collector turns any public GitHub repository into a target file:</p>
+  <pre><code>npm run collect -- --repo https://github.com/owner/name</code></pre>
+  <p>It shallow-clones the repo into a temporary directory, distills it into a compact evidence bundle (≤ 20,000 characters, so 7B/8B local models can evaluate it too), writes <code>targets/repo-&lt;owner&gt;-&lt;name&gt;.json</code>, and deletes the clone. The evidence includes:</p>
+  <ul>
+    <li>Repo stats — file count, language mix, and whether tests, CI workflows, a LICENSE, a Dockerfile, and a lockfile exist</li>
+    <li>File tree (up to 150 entries)</li>
+    <li>README excerpt</li>
+    <li>Manifests and configs (package.json, pyproject.toml, requirements.txt, Dockerfile, CI yaml)</li>
+    <li>Key source files (entry points, then largest shallow files)</li>
+    <li>Security scan — static indicators across seven categories: install hooks, obfuscation, network activity, dangerous file operations, cron/scheduled tasks, Dockerfile risks, and the declared dependency list. Pair with <code>rubrics/security.json</code> for a malware-risk evaluation. Static analysis only: no code execution and no CVE database lookups.</li>
+  </ul>
+  <p>Then evaluate it with the repo rubric:</p>
+  <pre><code>npm run collect  -- --repo https://github.com/owner/name
+npm run evaluate -- --target targets/repo-owner-name.json --rubric rubrics/repo-quality.json --model agnes</code></pre>
+</section>
+
+<section id="compare">
+  <h2>4 · Compare models</h2>
+  <pre><code>npm run compare -- --target "owner/name"</code></pre>
+  <p>Builds a Markdown table of the <strong>latest run per model</strong> for one target: every criterion score, the overall verdict, latency, and token usage. It prints to the terminal and saves <code>reports/compare-&lt;target&gt;.md</code>.</p>
+  <ul>
+    <li><code>--target</code> can be omitted when only one target has reports.</li>
+    <li>At least two models must have reports for the target.</li>
+  </ul>
+</section>
+
+<section id="webui">
+  <h2>5 · Web UI</h2>
+  <pre><code>npm run web</code></pre>
+  <p>Serves the UI at <a href="http://localhost:3000">http://localhost:3000</a> (change the port with the <code>PORT</code> environment variable).</p>
+  <ul>
+    <li><strong>Left panel</strong> — pick a model, target, and rubric, then <em>Run evaluation</em>. Disabled models appear greyed out. The dropdowns list whatever files exist in <code>targets/</code> and <code>rubrics/</code>, so new files appear on reload.</li>
+    <li><strong>Latest run</strong> — the verdict, per-criterion box-meter scores, and the model's strengths, weaknesses, recommendations, and risk flags.</li>
+    <li><strong>Model comparison</strong> — the latest run per model for the most recently evaluated target, side by side.</li>
+  </ul>
+  <p>The API behind it: <code>GET /api/config</code>, <code>GET /api/reports</code>, and <code>POST /api/evaluate</code> with <code>{"model", "target", "rubric"}</code> (filenames, not paths).</p>
+</section>
+
+<section id="models">
+  <h2>6 · Models &amp; providers</h2>
+  <p><code>models.json</code> is the model registry. Each entry maps an id to a provider config:</p>
+  <pre><code>{
+  "default": "llama3.1",
+  "models": {
+    "llama3.1": { "type": "local",     "model_name": "llama3.1:8b",     "temperature": 0.2, "enabled": true },
+    "agnes":    { "type": "openai",    "model_name": "agnes-2.0-flash", "base_url": "https://apihub.agnes-ai.com/v1",
+                  "api_key_env": "AGNES_API_KEY", "temperature": 0.2, "enabled": true },
+    "claude":   { "type": "anthropic", "model_name": "claude-opus-4-8", "enabled": false }
+  }
+}</code></pre>
+  <table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td>type</td><td><code>local</code> (Ollama) · <code>anthropic</code> · <code>openai</code> (any OpenAI-compatible host) · <code>google</code> (not wired up yet)</td></tr>
+    <tr><td>model_name</td><td>The provider's model id (e.g. <code>llama3.1:8b</code>, <code>claude-opus-4-8</code>)</td></tr>
+    <tr><td>enabled</td><td>Disabled models are rejected by the CLI and greyed out in the UI</td></tr>
+    <tr><td>temperature</td><td>Optional. Used by local and openai providers; the anthropic provider never sends it (current Claude models reject sampling parameters)</td></tr>
+    <tr><td>base_url</td><td>openai type only — point at any OpenAI-compatible host (default <code>https://api.openai.com/v1</code>)</td></tr>
+    <tr><td>api_key_env</td><td>openai type only — which environment variable holds the key (default <code>OPENAI_API_KEY</code>)</td></tr>
+  </table>
+  <p class="note">To enable a cloud model: put its key in <code>.env</code>, then flip <code>"enabled": true</code> in models.json. To add another OpenAI-compatible service, copy the <code>agnes</code> entry and change <code>base_url</code>, <code>model_name</code>, and <code>api_key_env</code>.</p>
+</section>
+
+<section id="targets">
+  <h2>7 · Targets</h2>
+  <p>A target is a JSON file in <code>targets/</code>:</p>
+  <pre><code>{
+  "name": "Tool Name",
+  "description": "One paragraph on what it is.",
+  "evidence": [
+    "Observed fact one.",
+    "Observed fact two."
+  ]
+}</code></pre>
+  <p>Write them by hand for products and services, or generate them with the collector (<a href="#collect">§3</a>) for GitHub repos. The model is instructed to judge <em>only</em> from the description and evidence, so richer evidence produces better-grounded scores.</p>
+</section>
+
+<section id="rubrics">
+  <h2>8 · Rubrics</h2>
+  <p>A rubric is a JSON file in <code>rubrics/</code> defining the score scale and criteria:</p>
+  <pre><code>{
+  "name": "repo-quality-rubric",
+  "scale": { "min": 1, "max": 10 },
+  "criteria": [
+    { "id": "correctness", "weight": 0.2, "description": "Does the code do what the project claims" }
+  ]
+}</code></pre>
+  <ul>
+    <li>Any scale works — the bundled rubrics use 1–5 (<code>default.json</code>, for AI tools) and 1–10 (<code>repo-quality.json</code> for repo quality; <code>security.json</code> for malware/security risk, where 10 = safest). Scores outside the scale are rejected.</li>
+    <li><code>weight</code> is optional. When <em>every</em> criterion has one, the Markdown report adds a <strong>weighted composite</strong> (Σ score × weight).</li>
+    <li>Descriptions are shown to the model verbatim — write them as judging instructions.</li>
+  </ul>
+</section>
+
+<section id="reports">
+  <h2>9 · Reports</h2>
+  <p>Every run writes two files to <code>reports/</code> (gitignored):</p>
+  <ul>
+    <li><code>&lt;target&gt;-&lt;model&gt;-&lt;timestamp&gt;.json</code> — the full run record: scores, verdict, strengths/weaknesses/recommendations/risk flags, model id and name, rubric and scale, latency, and token usage. This is what the comparison views read.</li>
+    <li><code>…​.md</code> — the same content as a readable Markdown report, including the weighted composite when the rubric has weights.</li>
+    <li><code>compare-&lt;target&gt;.md</code> — written by <code>npm run compare</code>.</li>
+  </ul>
+</section>
+
+<section id="env">
+  <h2>10 · Environment variables</h2>
+  <p>Put variables in <code>.env</code> at the project root — the CLI and server load it automatically. It is gitignored; never commit keys.</p>
+  <table>
+    <tr><th>Variable</th><th>Used by</th><th>Notes</th></tr>
+    <tr><td>AGNES_API_KEY</td><td>agnes model</td><td>Agnes AI key (Bearer auth)</td></tr>
+    <tr><td>ANTHROPIC_API_KEY</td><td>claude model</td><td>Required once <code>claude</code> is enabled</td></tr>
+    <tr><td>ANTHROPIC_BASE_URL</td><td>anthropic provider</td><td>Optional; default <code>https://api.anthropic.com</code></td></tr>
+    <tr><td>OPENAI_API_KEY</td><td>gpt model</td><td>Default key variable for openai-type entries without <code>api_key_env</code></td></tr>
+    <tr><td>OLLAMA_HOST</td><td>local models</td><td>Optional; default <code>http://localhost:11434</code>. A scheme-less value like <code>127.0.0.1:11434</code> also works</td></tr>
+    <tr><td>PORT</td><td>web server</td><td>Optional; default 3000</td></tr>
+  </table>
+</section>
+
+<section id="troubleshooting">
+  <h2>11 · Troubleshooting</h2>
+  <table>
+    <tr><th>Symptom</th><th>Fix</th></tr>
+    <tr><td>Ollama request failed / fetch failed</td><td>Start Ollama and confirm the model is pulled: <code>ollama list</code></td></tr>
+    <tr><td>Model "x" is disabled in models.json</td><td>Set <code>"enabled": true</code> for that entry (and add its API key first)</td></tr>
+    <tr><td>…requires the XXX_API_KEY environment variable</td><td>Add the key to <code>.env</code> in the project root</td></tr>
+    <tr><td>Unknown model "x"</td><td>Use an id listed in models.json — the error message lists them</td></tr>
+    <tr><td>Score for "x" is missing or outside min–max</td><td>The model returned malformed output — re-run; small local models occasionally miss a criterion</td></tr>
+    <tr><td>Repository not found (collector)</td><td>Check the URL; private repos are not supported by the collector</td></tr>
+    <tr><td>Need reports from at least 2 models (compare)</td><td>Run the same target through a second model first</td></tr>
+  </table>
+  <p class="note warn">Local 7B/8B models are slower (40–90 s) and less consistent than cloud models. When a local model's scores look off, run the same target through a second model and compare — disagreement is signal.</p>
+</section>
+
+</main>
+</body>
+</html>

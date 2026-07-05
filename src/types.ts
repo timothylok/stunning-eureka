@@ -1,3 +1,8 @@
+export interface RepoFile {
+  rel: string;
+  size: number;
+}
+
 export interface Target {
   name: string;
   description: string;
@@ -7,6 +12,7 @@ export interface Target {
 export interface RubricCriterion {
   id: string;
   description: string;
+  weight?: number;
 }
 
 export interface Rubric {
@@ -48,6 +54,7 @@ export interface EvaluationResult {
 export interface EvaluationRun {
   target: string;
   rubric: string;
+  scale?: { min: number; max: number };
   model_provider_id: string;
   model_name: string;
   started_at: string;

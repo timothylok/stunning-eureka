@@ -174,6 +174,7 @@
   <h1>AI Tools Evaluator</h1>
   <span class="boxes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
   <p>One rubric, any model — local or cloud.</p>
+  <a href="/help" style="margin-left:auto;color:#94a6ad;font-size:13px;">User guide</a>
 </header>
 <main>
   <form class="panel" id="form">
@@ -200,12 +201,15 @@
 </main>
 <script>
 const $ = (id) => document.getElementById(id);
-let scaleMax = 5;
 
-function meter(score) {
+function meter(score, max) {
   let boxes = "";
-  for (let i = 1; i <= scaleMax; i++) boxes += `<i class="${i <= score ? "on" : ""}"></i>`;
-  return `<span class="meter" aria-label="${score} of ${scaleMax}">${boxes}</span>`;
+  for (let i = 1; i <= max; i++) boxes += `<i class="${i <= score ? "on" : ""}"></i>`;
+  return `<span class="meter" aria-label="${score} of ${max}">${boxes}</span>`;
+}
+
+function runScale(run) {
+  return run.scale?.max ?? Math.max(5, ...Object.values(run.result.scores));
 }
 
 function esc(s) {
@@ -229,7 +233,7 @@ function renderResult(run) {
   $("result").innerHTML = `
     <p class="overall">${esc(r.overall_rating)}</p>
     <p class="meta">${esc(run.model_provider_id)} (${esc(run.model_name)}) · ${run.latency_ms} ms${run.token_usage ? ` · ${run.token_usage.prompt}/${run.token_usage.completion} tokens` : ""}</p>
-    ${Object.entries(r.scores).map(([k, v]) => `<div class="scorerow"><span class="name">${esc(k)}</span>${meter(v)}<span class="num">${v}</span></div>`).join("")}
+    ${Object.entries(r.scores).map(([k, v]) => `<div class="scorerow"><span class="name">${esc(k)}</span>${meter(v, runScale(run))}<span class="num">${v}</span></div>`).join("")}
     <div class="lists">
       ${list("Strengths", r.strengths)}
       ${list("Weaknesses", r.weaknesses)}
@@ -255,7 +259,7 @@ async function renderComparison(preferredTarget) {
     <tr><th></th>${models.map((m) => `<th>${esc(m.model_provider_id)}</th>`).join("")}</tr>
     ${criteria.map((c) => `<tr><td>${esc(c)}</td>${models.map((m) => {
       const s = m.result.scores[c];
-      return `<td>${s == null ? "—" : meter(s) + `<span class="num">${s}</span>`}</td>`;
+      return `<td>${s == null ? "—" : meter(s, runScale(m)) + `<span class="num">${s}</span>`}</td>`;
     }).join("")}</tr>`).join("")}
     <tr><td>latency</td>${models.map((m) => `<td>${m.latency_ms} ms</td>`).join("")}</tr>
     <tr><td>tokens in/out</td>${models.map((m) => `<td>${m.token_usage ? `${m.token_usage.prompt}/${m.token_usage.completion}` : "—"}</td>`).join("")}</tr>
@@ -276,7 +280,6 @@ $("form").addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? res.statusText);
-    scaleMax = Math.max(scaleMax, ...Object.values(data.result.scores));
     renderResult(data);
     await renderComparison(data.target);
     status.className = "";

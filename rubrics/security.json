@@ -1,0 +1,14 @@
+{
+  "name": "security-malware-rubric",
+  "scale": { "min": 1, "max": 10 },
+  "criteria": [
+    { "id": "malicious-intent", "weight": 0.2, "description": "Evidence of deliberate harm: data exfiltration, backdoors, credential theft, or hidden functionality contradicting the stated purpose. Score 10 if no indicators exist; list any concrete indicator with its file reference in risk_flags." },
+    { "id": "obfuscation", "weight": 0.15, "description": "Encoded payloads, eval/exec of strings, dynamic code construction, base64 or hex blobs hiding behavior. Benign uses (e.g. data encoding with clear purpose) should not lower the score much; unexplained obfuscation should. 10 = none found." },
+    { "id": "network-activity", "weight": 0.15, "description": "Outbound calls to unexpected or hardcoded destinations: raw IP URLs, unexplained POST/PUT endpoints, domains unrelated to the project's stated purpose. 10 = all network activity clearly matches the project's purpose." },
+    { "id": "file-operations", "weight": 0.1, "description": "Destructive or system-level file operations: deleting system paths, modifying system configs or the registry, world-writable permissions, piping remote scripts to a shell. 10 = none found." },
+    { "id": "dependency-risk", "weight": 0.1, "description": "Judge the declared dependency list for typosquatting (near-misses of popular package names), suspicious or unnecessary packages, and unpinned versions. Note: no CVE database was consulted — reason from the names and versions given. 10 = clean, pinned, well-known packages." },
+    { "id": "install-hooks", "weight": 0.1, "description": "Code that runs at install time: npm preinstall/postinstall/prepare scripts, setup.py custom commands, Makefile remote pipes. Any install hook executing network fetches or shells is a strong indicator. 10 = no install-time execution." },
+    { "id": "cron-abuse", "weight": 0.1, "description": "Scheduled tasks whose purpose is unclear or that execute remote content. Legitimate documented schedules (e.g. a daily data refresh described in the README) should score well. 10 = no schedules or all clearly legitimate." },
+    { "id": "docker-risk", "weight": 0.1, "description": "Container risks: privileged mode, ADD from remote URLs, remote scripts piped to shell during build, ENTRYPOINT fetching remote code. 10 = no container files or no risky patterns." }
+  ]
+}

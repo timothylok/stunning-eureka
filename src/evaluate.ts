@@ -47,6 +47,7 @@ export async function runEvaluation(
   const run: EvaluationRun = {
     target: target.name,
     rubric: rubric.name,
+    scale: rubric.scale,
     model_provider_id: id,
     model_name: modelConfig.model_name,
     started_at: startedAt.toISOString(),
@@ -55,6 +56,6 @@ export async function runEvaluation(
     result,
   };
 
-  const { jsonPath, mdPath } = saveReport(run);
+  const { jsonPath, mdPath } = saveReport(run, rubric);
   return { run, jsonPath, mdPath };
 }

@@ -19,9 +19,9 @@ const server = createServer((req, res) => {
 async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
 
-  if (req.method === "GET" && url.pathname === "/") {
+  if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/help")) {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-    res.end(readFileSync("web/index.html"));
+    res.end(readFileSync(url.pathname === "/help" ? "web/help.html" : "web/index.html"));
     return;
   }
 

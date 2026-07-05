@@ -1,10 +1,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { EvaluationRun } from "./types.js";
+import type { EvaluationRun, Rubric } from "./types.js";
 
 const REPORTS_DIR = "reports";
 
-export function saveReport(run: EvaluationRun): { jsonPath: string; mdPath: string } {
+export function saveReport(run: EvaluationRun, rubric?: Rubric): { jsonPath: string; mdPath: string } {
   mkdirSync(REPORTS_DIR, { recursive: true });
   const stamp = run.started_at.replace(/[:.]/g, "-");
   const base = `${slug(run.target)}-${slug(run.model_provider_id)}-${stamp}`;
@@ -12,11 +12,20 @@ export function saveReport(run: EvaluationRun): { jsonPath: string; mdPath: stri
   const mdPath = join(REPORTS_DIR, `${base}.md`);
 
   writeFileSync(jsonPath, JSON.stringify(run, null, 2));
-  writeFileSync(mdPath, renderMarkdown(run));
+  writeFileSync(mdPath, renderMarkdown(run, rubric));
   return { jsonPath, mdPath };
 }
 
-function renderMarkdown(run: EvaluationRun): string {
+function weightedComposite(run: EvaluationRun, rubric?: Rubric): string | undefined {
+  if (!rubric?.criteria.every((c) => typeof c.weight === "number")) return undefined;
+  const composite = rubric.criteria.reduce(
+    (sum, c) => sum + (run.result.scores[c.id] ?? 0) * (c.weight ?? 0),
+    0,
+  );
+  return composite.toFixed(1);
+}
+
+function renderMarkdown(run: EvaluationRun, rubric?: Rubric): string {
   const r = run.result;
   const lines = [
     `# Evaluation: ${run.target}`,
@@ -34,6 +43,7 @@ function renderMarkdown(run: EvaluationRun): string {
     ``,
     `## Scores`,
     ...Object.entries(r.scores).map(([id, score]) => `- **${id}:** ${score}`),
+    ...(weightedComposite(run, rubric) ? [`- **weighted composite:** ${weightedComposite(run, rubric)}`] : []),
     ``,
     `## Strengths`,
     ...bullets(r.strengths),
